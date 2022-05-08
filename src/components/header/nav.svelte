@@ -2,6 +2,18 @@
   import { link, useLocation } from 'svelte-navigator'
 
   let location = useLocation()
+  let selected
+  let barPosition = 0
+
+  const setBarPosition = (e, action) => {
+    if (action === 'enter') {
+      barPosition = `${e.target.children[0].offsetLeft}px`
+    } else if (action === 'leave') {
+      barPosition = `${selected?.children[0].offsetLeft}px`
+    }
+  }
+
+  $: barPosition = `${selected?.children[0].offsetLeft}px`
 
   const links = [
     {
@@ -30,75 +42,54 @@
 <nav>
   <ul>
     {#each links as { pathname, name }}
-      <li class={$location.pathname === pathname ? 'selected' : ''}>
-        <a href={pathname} use:link>{name}</a>
-      </li>
+      {#if $location.pathname === pathname}
+        <li
+          bind:this={selected}
+          class="selected"
+          on:mouseleave={(e) => setBarPosition(e, 'leave')}
+          on:mouseenter={(e) => setBarPosition(e, 'enter')}
+        >
+          <a href={pathname} use:link>{name}</a>
+        </li>
+      {:else}
+        <li
+          on:mouseleave={(e) => setBarPosition(e, 'leave')}
+          on:mouseenter={(e) => setBarPosition(e, 'enter')}
+        >
+          <a href={pathname} use:link>{name}</a>
+        </li>
+      {/if}
     {/each}
   </ul>
+  <div class="bar" style="--position: {barPosition}" />
 </nav>
 
 <style>
   nav {
     align-self: center;
     justify-self: flex-end;
+    position: relative;
   }
 
   ul {
     display: flex;
-    gap: 1.5rem;
   }
 
   li {
     display: grid;
     justify-content: center;
-    position: relative;
+    padding: 0 0.75rem;
   }
 
-  li::after {
-    content: '';
+  .bar {
     position: absolute;
-    bottom: -15px;
-    width: 0%;
+    bottom: -10px;
+    width: 20px;
     height: 2px;
     background-color: rgb(0, 255, 157);
     transition: 0.3s;
-    left: 0;
-
+    left: var(--position);
     filter: drop-shadow(0px 0px 3px rgb(0, 255, 157, 1));
-  }
-
-  li::before {
-    content: '';
-    position: absolute;
-    bottom: -17px;
-    left: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: rgb(0, 255, 157);
-    transition: 0.3s;
-    transform: scale(0);
-    filter: drop-shadow(0px 0px 5px rgb(0, 255, 157, 1));
-  }
-
-  li:hover::after {
-    width: 100%;
-  }
-
-  li:hover::before {
-    transition-delay: 0.2s;
-    left: calc(50% - 4px);
-    transform: scale(1);
-  }
-
-  .selected::after {
-    width: 100%;
-  }
-
-  .selected::before {
-    transition-delay: 0.2s;
-    left: calc(50% - 4px);
-    transform: scale(1);
   }
 
   a {

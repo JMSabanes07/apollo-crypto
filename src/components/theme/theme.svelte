@@ -15,6 +15,7 @@
   }
 
   :global(body) {
+    width: 100%;
     background: #080808;
   }
 
